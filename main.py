@@ -2,11 +2,9 @@
 
 import itertools
 import logging
+import time
 
-
-
-
-def method(ordered, n):
+def method(ordered, n, choices):
     l = len(ordered)
     y = n
 
@@ -18,11 +16,12 @@ def method(ordered, n):
     while True:
 
         results.append(list(curr))
+        if len(results) >= choices:
+            return results
 
         if not pool or (max(pool) < min(curr)):
             if y >= len(ordered):
                 break
-            logging.warning("Adding {} to pool".format(ordered[y], pool))
             pool.append(ordered[y])
             y += 1
 
@@ -53,14 +52,12 @@ def method(ordered, n):
         curr[index] = smallest
         index -= 1
 
-        logging.warning('-' * 60)
-        logging.warning("{} -> {} :: {}".format(curr_before, curr, pool))
+        logging.debug('-' * 60)
+        logging.debug("{} -> {} :: {}".format(curr_before, curr, pool))
         curr_before = list(curr)
 
         # Now we want to replace everything before index if we can
-        # TODO fix bug
         for i in range(0, index+1):
-            logging.warning("pool = {}; curr = {}; i = {}".format(pool, curr, i))
             if pool[0] < curr[i]:
                 m = int(pool[0])
                 pool = pool[1:]
@@ -69,34 +66,57 @@ def method(ordered, n):
                 curr[i] = m
 
         if curr_before != curr:
-            logging.warning("{} -> {} :: {}".format(curr_before, curr, pool))
+            logging.debug("{} -> {} :: {}".format(curr_before, curr, pool))
 
     return results
 
-results = method(list(range(1, 21)), 4)
+def method2(hostnames, n, choices):
+    curr = -1
+    count = 0
+    results = []
+    for p in itertools.permutations(hostnames, n):
+        p = list(p)
+        if sorted(p) == p:
+            x = []
+            for e in p:
+                x.append(len(hostnames)-1-e)
+            x = sorted(x)
 
-hostnames = list(reversed(range(0, 20)))
-index = 0
-curr = -1
-count = 0
-for p in itertools.permutations(hostnames, 4):
-    p = list(p)
-    if sorted(p) == p:
-        x = []
-        for e in p:
-            x.append(20-e)
-        x = sorted(x)
+            if x[-1] != curr:
+                curr = x[-1]
+                count = 1
+            else:
+                count += 1
+            results.append(x)
 
-        if x[-1] != curr:
-            if curr > 0:
-                #print("{} for {} times".format(curr, count))
-                pass
-            curr = x[-1]
-            count = 1
-        else:
-            count += 1
+            if len(results) >= choices:
+                return results
 
-        print("{} == {} : {}".format(x, results[index], x == results[index]))
-        index += 1
+    return results
+
+
+
+
+MAGIC_NUMBER = 200
+
+sA = time.time()
+results = method(list(range(0, MAGIC_NUMBER)), 4, 100)
+tA = time.time()
+
+logging.warning("Fast Method = {}".format(tA - sA))
+
+hostnames = list(reversed(range(0, MAGIC_NUMBER)))
+sB = time.time()
+results2 = method2(hostnames, 4, 100)
+tB = time.time()
+
+logging.warning("Naive Method = {}".format(tB - sB))
+
+for i in range(0, len(results)):
+    a = results[i]
+    b = results2[i]
+    if a != b:
+        print("{} == {} : {}".format(a, b, a == b))
+
 
 
