@@ -1,8 +1,43 @@
 #!/usr/bin/env python
 
+import argparse
 import itertools
 import logging
+import sys
+import textwrap
 import time
+
+parser = argparse.ArgumentParser(
+    prog="Combinations sorted by Lowest Unique Maximum",
+    description=textwrap.dedent("""\
+        Produce the top N combinations, sorted by LUM. Normally combinations
+        would come out as 1234, 1235, 1236, ... however this program wants to
+        minimise the maximum.  Therefore the program produces 1234, 1235, 1245,
+        1345, 2345, and 1236... Take two adjacent combinations, find the unique
+        maximum you'll see it is strictly increasing for the wholeset.
+        """))
+
+parser.add_argument(
+    '-c', '--choices',
+    dest='choices',
+    type=int,
+    required=True)
+
+parser.add_argument(
+    '-n', '--number',
+    dest='number',
+    type=int,
+    required=True)
+
+parser.add_argument(
+    '-l', '--list',
+    nargs='+',
+    type=int,
+    dest='list',
+    required=True)
+
+args = parser.parse_args()
+
 
 def method(ordered, n, choices):
     l = len(ordered)
@@ -70,7 +105,7 @@ def method(ordered, n, choices):
 
     return results
 
-def method2(hostnames, n, choices):
+def slow_method(hostnames, n, choices):
     curr = -1
     count = 0
     results = []
@@ -94,29 +129,25 @@ def method2(hostnames, n, choices):
 
     return results
 
-
-
-
-MAGIC_NUMBER = 200
-
 sA = time.time()
-results = method(list(range(0, MAGIC_NUMBER)), 4, 100)
+results = method(args.list, args.number, args.choices)
 tA = time.time()
+
+for result in results:
+    print(result)
 
 logging.warning("Fast Method = {}".format(tA - sA))
 
-hostnames = list(reversed(range(0, MAGIC_NUMBER)))
-sB = time.time()
-results2 = method2(hostnames, 4, 100)
-tB = time.time()
-
-logging.warning("Naive Method = {}".format(tB - sB))
-
-for i in range(0, len(results)):
-    a = results[i]
-    b = results2[i]
-    if a != b:
-        print("{} == {} : {}".format(a, b, a == b))
+#rev_list = list(reversed(args.list))
+#sB = time.time()
+#results2 = slow_method(rev_list, args.number, args.choices)
+#tB = time.time()
+#logging.warning("Naive Method = {}".format(tB - sB))
+#for i in range(0, len(results)):
+#    a = results[i]
+#    b = results2[i]
+#    if a != b:
+#        print("{} == {} : {}".format(a, b, a == b))
 
 
 
