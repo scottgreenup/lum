@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 
+"""
+Example:
+
+    $ ./main.py --choices 10 --list host1 host2 host3 host4 host5 --number 4
+    ['host1', 'host2', 'host3', 'host4']
+    ['host1', 'host2', 'host3', 'host5']
+    ['host1', 'host2', 'host4', 'host5']
+    ['host1', 'host3', 'host4', 'host5']
+    ['host2', 'host3', 'host4', 'host5']
+
+"""
+
 import argparse
-import itertools
-import logging
-import sys
 import textwrap
-import time
 
 parser = argparse.ArgumentParser(
     prog="Combinations sorted by Lowest Unique Maximum",
@@ -32,36 +40,54 @@ parser.add_argument(
 parser.add_argument(
     '-l', '--list',
     nargs='+',
-    type=int,
     dest='list',
     required=True)
 
 args = parser.parse_args()
 
 
-def method(ordered, n, choices):
-    l = len(ordered)
-    y = n
+def generator(ordered, n, choices):
+    """Generates the next LUM combination starting with ordered[:n]
 
+        ordered - Ascending list of elements
+        n - The number of elements per combination
+        choices - The number of choies
+
+    run_time = O(choices)
+    """
+
+    if len(ordered) == n:
+        yield ordered
+        return
+
+    if len(ordered) < n:
+        print(
+            "Can't create combinations of length {} with only {} elements"
+            .format(n, len(ordered)))
+        return
+
+    y = n
     pool = []
     results = []
-
     curr = ordered[:n]
+
+    counted = 0
 
     while True:
 
-        results.append(list(curr))
-        if len(results) >= choices:
-            return results
+        yield list(curr)
+        counted += 1
+        if counted >= choices:
+            return
 
         if not pool or (max(pool) < min(curr)):
             if y >= len(ordered):
-                break
+                return
             pool.append(ordered[y])
             y += 1
 
+        # TODO replace pool with ordered set or something
         pool = sorted(pool)
-
         index = None
         index_smallest = 0
 
@@ -75,79 +101,23 @@ def method(ordered, n, choices):
             if index is None:
                 index_smallest += 1
 
-        # index is what we are replacing
-        # index_smallest is what we replace it with
-
-        curr_before = list(curr)
-
-        smallest = pool[index_smallest]
-        pool.remove(pool[index_smallest])
-        pool.append(curr[index])
+        do_swap(curr, index, pool, index_smallest)
         pool = sorted(pool)
-        curr[index] = smallest
-        index -= 1
 
-        logging.debug('-' * 60)
-        logging.debug("{} -> {} :: {}".format(curr_before, curr, pool))
-        curr_before = list(curr)
-
-        # Now we want to replace everything before index if we can
-        for i in range(0, index+1):
+        for i in range(0, index):
             if pool[0] < curr[i]:
-                m = int(pool[0])
-                pool = pool[1:]
-                pool.append(curr[i])
+                do_swap(curr, i, pool, 0)
                 pool = sorted(pool)
-                curr[i] = m
 
-        if curr_before != curr:
-            logging.debug("{} -> {} :: {}".format(curr_before, curr, pool))
 
-    return results
+def do_swap(curr, curr_index, pool, pool_index):
+    a = pool[pool_index]
+    pool.remove(pool[pool_index])
+    pool.append(curr[curr_index])
+    curr[curr_index] = a
 
-def slow_method(hostnames, n, choices):
-    curr = -1
-    count = 0
-    results = []
-    for p in itertools.permutations(hostnames, n):
-        p = list(p)
-        if sorted(p) == p:
-            x = []
-            for e in p:
-                x.append(len(hostnames)-1-e)
-            x = sorted(x)
 
-            if x[-1] != curr:
-                curr = x[-1]
-                count = 1
-            else:
-                count += 1
-            results.append(x)
-
-            if len(results) >= choices:
-                return results
-
-    return results
-
-sA = time.time()
-results = method(args.list, args.number, args.choices)
-tA = time.time()
-
-for result in results:
+for result in generator(args.list, args.number, args.choices):
     print(result)
-
-logging.warning("Fast Method = {}".format(tA - sA))
-
-#rev_list = list(reversed(args.list))
-#sB = time.time()
-#results2 = slow_method(rev_list, args.number, args.choices)
-#tB = time.time()
-#logging.warning("Naive Method = {}".format(tB - sB))
-#for i in range(0, len(results)):
-#    a = results[i]
-#    b = results2[i]
-#    if a != b:
-#        print("{} == {} : {}".format(a, b, a == b))
-
 
 
