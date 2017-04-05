@@ -43,8 +43,6 @@ parser.add_argument(
     dest='list',
     required=True)
 
-args = parser.parse_args()
-
 
 def generator(ordered, n, choices):
     """Generates the next LUM combination starting with ordered[:n]
@@ -116,8 +114,9 @@ def do_swap(curr, curr_index, pool, pool_index):
     pool.append(curr[curr_index])
     curr[curr_index] = a
 
-
-for result in generator(args.list, args.number, args.choices):
-    print(result)
+if __name__ == '__main__':
+    args = parser.parse_args()
+    for result in generator(args.list, args.number, args.choices):
+        print(result)
 
 
