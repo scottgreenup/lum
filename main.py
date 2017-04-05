@@ -16,7 +16,7 @@ import argparse
 import textwrap
 
 parser = argparse.ArgumentParser(
-    prog="Combinations sorted by Lowest Unique Maximum",
+    prog="main.py",
     description=textwrap.dedent("""\
         Produce the top N combinations, sorted by LUM. Normally combinations
         would come out as 1234, 1235, 1236, ... however this program wants to
